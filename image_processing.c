@@ -1,19 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 
-int main(){
-    FILE *streamIn = fopen("/home/mial/Downloads/snail.bmp", "rb");
+int main() {
+    FILE *img = fopen("img.ppm", "rb");
+    if (img == NULL) return 1;
 
-    if (streamIn == NULL) {
-        perror("Error opening file"); // Tells you WHY it failed (e.g., File not found)
-        return 1;
-    }
+    char version[3]; // var to store version 
+    int width ,height , max_val; // vars to store the other header values 
 
-    printf("File stream opened successfully at memory address: %p\n", (void*)streamIn);
-    printf("File : %d\n", &streamIn);
+    // read and store all the header values 
+    // the reason why we dothis is to make the cursor past the header
+    fscanf(img, "%s %d %d %d", version, &width, &height, &max_val);
+    fgetc(img); // consome the  last remining whitespace just before the first pixel red value
 
-    // Always close what you open to avoid memory leaks/resource exhaustion
-    fclose(streamIn);
-    return 0;
+    /*
+    .ppm files are stored usually as [R1,G1,B1,R2,G2,B2,R3,....,Bn]
+    */
 }
