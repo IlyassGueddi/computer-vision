@@ -24,7 +24,6 @@ int main() {
     int choice, brightness,v,index;
     unsigned char *temp_data = (unsigned char *)malloc(size);
     
-    int sharp_ker[3][3] = {{0,-v,0},{-v,(1+4*v),-v},{0,-v,0}};
     while(true){
 
         /*
@@ -82,6 +81,8 @@ int main() {
             printf("Image saved successfully as output.ppm\n");
 
         }else if(choice == 2){
+            // declaring the kernal for sharpness
+            int sharp_ker[3][3] = {{0,-v,0},{-v,(1+4*v),-v},{0,-v,0}};
             printf("sharpeness value: ");
             scanf("%d", &v);
            
