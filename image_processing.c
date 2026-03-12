@@ -21,7 +21,7 @@ int main() {
     //read the pixels into array
     fread(data, sizeof(unsigned char), size , img);
 
-    int choice, brightness,v,index;
+    int choice, brightness,v,index,blurV;
     unsigned char *temp_data = (unsigned char *)malloc(size);
     
     while(true){
@@ -81,13 +81,14 @@ int main() {
             printf("Image saved successfully as output.ppm\n");
 
         }else if(choice == 2){
-            // declaring the kernal for sharpness
-            int sharp_ker[3][3] = {{0,-v,0},{-v,(1+4*v),-v},{0,-v,0}};
+            
             printf("sharpeness value: ");
             scanf("%d", &v);
-           
-            for (int y = 1; y < height; y++) {
-                for (int x = 1; x < width; x++) {
+            // declaring the kernal for sharpness
+            float sharp_ker[3][3] = {{0,-v,0},{-v,(1+4*v),-v},{0,-v,0}};
+
+            for (int y = 1; y < height - 1; y++) {
+                for (int x = 1; x < width - 1; x++) {
                     // pixel (x, y)
                     // every pixel is 3 values R,G,B
                     for (int c = 0; c < 3; c++) {
@@ -137,7 +138,153 @@ int main() {
             printf("Image saved successfully as output.ppm\n");
 
         }else if(choice == 3){
-            break;
+            printf("Blur value(1-3): ");
+            scanf("%d", &blurV);
+
+            switch(blurV) {
+                case 1:
+                    // declaring the kernal for blur
+                    float blur1_ker[3][3] = {{0.0625,0.125,0.0625},{0.125,0.25,0.125},{0.0625,0.125,0.0625}};
+
+                    for (int y = 1; y < height - 1; y++) {
+                        for (int x = 1; x < width - 1; x++) {
+                            // pixel (x, y)
+                            // every pixel is 3 values R,G,B
+                            for (int c = 0; c < 3; c++) {
+                                
+                                int index = (y * width + x) * 3 + c;
+                                
+                                float sum = 0.0;
+
+                                for (int i = 0; i < 3; i++) {      // kernel Row 
+                                    for (int j = 0; j < 3; j++) {  // Kernel Column 
+
+                                        int ky = i - 1; 
+                                        int kx = j - 1;
+
+                                        int neighbor_idx2 = ((y + ky) * width + (x + kx)) * 3 + c;
+
+                                        // Multiply by kernel weight
+                                        sum += (float)data[neighbor_idx2] * blur1_ker[i][j];
+                                    }
+                                }
+                                if (sum > 255) sum = 255;
+                                if (sum < 0) sum = 0;
+
+                                temp_data[index] = (unsigned char)sum;
+                            }
+                        }
+                    }
+                    break;
+                    
+                case 2:
+                    
+                    // declaring the kernal for blur
+                    float blur2_ker[5][5] = {
+                        {1.0/256, 4.0/256,  6.0/256,  4.0/256,  1.0/256},
+                        {4.0/256, 16.0/256, 24.0/256, 16.0/256, 4.0/256},
+                        {6.0/256, 24.0/256, 36.0/256, 24.0/256, 6.0/256},
+                        {4.0/256, 16.0/256, 24.0/256, 16.0/256, 4.0/256},
+                        {1.0/256, 4.0/256,  6.0/256,  4.0/256,  1.0/256}
+                    };
+
+                    for (int y = 2; y < height - 2; y++) {
+                        for (int x = 2; x < width - 2; x++) {
+                            // pixel (x, y)
+                            // every pixel is 3 values R,G,B
+                            for (int c = 0; c < 3; c++) {
+                                
+                                int index = (y * width + x) * 3 + c;
+                                
+                                float sum = 0.0;
+
+                                for (int i = 0; i < 5; i++) {      // kernel Row 
+                                    for (int j = 0; j < 5; j++) {  // Kernel Column 
+
+                                        int ky = i - 2; 
+                                        int kx = j - 2;
+
+                                        int neighbor_idx2 = ((y + ky) * width + (x + kx)) * 3 + c;
+
+                                        // Multiply by kernel weight
+                                        sum += (float)data[neighbor_idx2] * blur2_ker[i][j];
+                                    }
+                                }
+                                if (sum > 255.0f) sum = 255.0f;
+                                if (sum < 0.0f) sum = 0.0f;
+
+                                temp_data[index] = (unsigned char)sum;
+                            }
+                        }
+                    }
+
+                    break;
+                case 3:
+                    // declaring the kernel for blur
+                    float blur3_ker[7][7] = {
+                        {1,  6,  15,  20,  15,  6,  1},
+                        {6,  36, 90,  120, 90,  36, 6},
+                        {15, 90, 225, 300, 225, 90, 15},
+                        {20, 120,300, 400, 300, 120,20},
+                        {15, 90, 225, 300, 225, 90, 15},
+                        {6,  36, 90,  120, 90,  36, 6},
+                        {1,  6,  15,  20,  15,  6,  1}
+                    };
+
+                    for (int y = 3; y < height - 3; y++) {
+                        for (int x = 3; x < width - 3; x++) {
+                            // pixel (x, y)
+                            // every pixel is 3 values R,G,B
+                            for (int c = 0; c < 3; c++) {
+                                
+                                int index = (y * width + x) * 3 + c;
+                                
+                                float sum = 0.0;
+
+                                for (int i = 0; i < 7; i++) {      // kernel Row 
+                                    for (int j = 0; j < 7; j++) {  // Kernel Column 
+
+                                        int ky = i - 3; 
+                                        int kx = j - 3;
+
+                                        int neighbor_idx2 = ((y + ky) * width + (x + kx)) * 3 + c;
+
+                                        // Multiply by kernel weight
+                                        sum += (float)data[neighbor_idx2] * (blur3_ker[i][j] / 4096.0f);
+                                    }
+                                }
+                                if (sum > 255.0f) sum = 255.0f;
+                                if (sum < 0.0f) sum = 0.0f;
+
+                                temp_data[index] = (unsigned char)sum;
+                            }
+                        }
+                    }
+                    break;
+
+            }
+            
+            //Open a new file for Writing in Binary mode 
+            FILE *out = fopen("output.ppm", "wb");
+
+            if (out == NULL) {
+                perror("Could not create output file");
+                return 1;
+            }
+
+            // Write the PPM Header
+            // P6 = Binary RGB, then Width, Height, and Max Color Value
+            fprintf(out, "P6\n%d %d\n255\n", width, height);
+
+            // Write the Array
+            // '1' is the size of each element (char), 'size' is the total bytes
+            fwrite(temp_data, 1, size, out);
+
+            // Close the file to save it to disk
+            fclose(out);
+
+            printf("Image saved successfully as output.ppm\n");
+
         }else{
             printf("invalid value;\n");
             break;
