@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
 
-
-void image_save(const char *path, int width, int height, unsigned char *temp_data);
+void image_save(const char *path, int width, int height, unsigned char *data);
+void generate_gaussian_kernel(float *kernel, int k_size, float sigma);
 
 int main() {
     FILE *img = fopen("img.ppm", "rb");
@@ -103,131 +104,54 @@ int main() {
             image_save("output.ppm", width, height, temp_data);
 
         }else if(choice == 3){
-            printf("Blur value(1-3): ");
+            int v; 
+            float sigma = 1.0; 
+
+            printf("Blur level (1: 3x3, 2: 5x5, 3: 7x7, 4: 9x9): ");
             scanf("%d", &blurV);
 
             switch(blurV) {
-                case 1:
-                    // declaring the kernal for blur
-                    float blur1_ker[3][3] = {{0.0625,0.125,0.0625},{0.125,0.25,0.125},{0.0625,0.125,0.0625}};
-
-                    for (int y = 1; y < height - 1; y++) {
-                        for (int x = 1; x < width - 1; x++) {
-                            // pixel (x, y)
-                            // every pixel is 3 values R,G,B
-                            for (int c = 0; c < 3; c++) {
-                                
-                                int index = (y * width + x) * 3 + c;
-                                
-                                float sum = 0.0;
-
-                                for (int i = 0; i < 3; i++) {      // kernel Row 
-                                    for (int j = 0; j < 3; j++) {  // Kernel Column 
-
-                                        int ky = i - 1; 
-                                        int kx = j - 1;
-
-                                        int neighbor_idx2 = ((y + ky) * width + (x + kx)) * 3 + c;
-
-                                        // Multiply by kernel weight
-                                        sum += (float)data[neighbor_idx2] * blur1_ker[i][j];
-                                    }
-                                }
-                                if (sum > 255) sum = 255;
-                                if (sum < 0) sum = 0;
-
-                                temp_data[index] = (unsigned char)sum;
-                            }
-                        }
-                    }
-                    break;
-                    
-                case 2:
-                    
-                    // declaring the kernal for blur
-                    float blur2_ker[5][5] = {
-                        {1.0/256, 4.0/256,  6.0/256,  4.0/256,  1.0/256},
-                        {4.0/256, 16.0/256, 24.0/256, 16.0/256, 4.0/256},
-                        {6.0/256, 24.0/256, 36.0/256, 24.0/256, 6.0/256},
-                        {4.0/256, 16.0/256, 24.0/256, 16.0/256, 4.0/256},
-                        {1.0/256, 4.0/256,  6.0/256,  4.0/256,  1.0/256}
-                    };
-
-                    for (int y = 2; y < height - 2; y++) {
-                        for (int x = 2; x < width - 2; x++) {
-                            // pixel (x, y)
-                            // every pixel is 3 values R,G,B
-                            for (int c = 0; c < 3; c++) {
-                                
-                                int index = (y * width + x) * 3 + c;
-                                
-                                float sum = 0.0;
-
-                                for (int i = 0; i < 5; i++) {      // kernel Row 
-                                    for (int j = 0; j < 5; j++) {  // Kernel Column 
-
-                                        int ky = i - 2; 
-                                        int kx = j - 2;
-
-                                        int neighbor_idx2 = ((y + ky) * width + (x + kx)) * 3 + c;
-
-                                        // Multiply by kernel weight
-                                        sum += (float)data[neighbor_idx2] * blur2_ker[i][j];
-                                    }
-                                }
-                                if (sum > 255.0f) sum = 255.0f;
-                                if (sum < 0.0f) sum = 0.0f;
-
-                                temp_data[index] = (unsigned char)sum;
-                            }
-                        }
-                    }
-
-                    break;
-                case 3:
-                    // declaring the kernel for blur
-                    float blur3_ker[7][7] = {
-                        {1,  6,  15,  20,  15,  6,  1},
-                        {6,  36, 90,  120, 90,  36, 6},
-                        {15, 90, 225, 300, 225, 90, 15},
-                        {20, 120,300, 400, 300, 120,20},
-                        {15, 90, 225, 300, 225, 90, 15},
-                        {6,  36, 90,  120, 90,  36, 6},
-                        {1,  6,  15,  20,  15,  6,  1}
-                    };
-
-                    for (int y = 3; y < height - 3; y++) {
-                        for (int x = 3; x < width - 3; x++) {
-                            // pixel (x, y)
-                            // every pixel is 3 values R,G,B
-                            for (int c = 0; c < 3; c++) {
-                                
-                                int index = (y * width + x) * 3 + c;
-                                
-                                float sum = 0.0;
-
-                                for (int i = 0; i < 7; i++) {      // kernel Row 
-                                    for (int j = 0; j < 7; j++) {  // Kernel Column 
-
-                                        int ky = i - 3; 
-                                        int kx = j - 3;
-
-                                        int neighbor_idx2 = ((y + ky) * width + (x + kx)) * 3 + c;
-
-                                        // Multiply by kernel weight
-                                        sum += (float)data[neighbor_idx2] * (blur3_ker[i][j] / 4096.0f);
-                                    }
-                                }
-                                if (sum > 255.0f) sum = 255.0f;
-                                if (sum < 0.0f) sum = 0.0f;
-
-                                temp_data[index] = (unsigned char)sum;
-                            }
-                        }
-                    }
-                    break;
-
+                case 1: v = 3; break;
+                case 2: v = 5; break;
+                case 3: v = 7; break;
+                case 4: v = 9; break;
+                default: v = 3; break;
             }
+
+            int radius = v / 2;
+            float *dynamic_ker = malloc(v * v * sizeof(float));
+
+           
+            generate_gaussian_kernel(dynamic_ker, v, sigma);
+
+         
+            for (int y = radius; y < height - radius; y++) {
+                for (int x = radius; x < width - radius; x++) {
+                    for (int c = 0; c < 3; c++) {
+                        int index = (y * width + x) * 3 + c;
+                        float pixel_sum = 0.0;
+
+                        for (int i = 0; i < v; i++) {
+                            for (int j = 0; j < v; j++) {
+                                int ky = i - radius;
+                                int kx = j - radius;
+                                int neighbor_idx = ((y + ky) * width + (x + kx)) * 3 + c;
+                                
+                               
+                                pixel_sum += (float)data[neighbor_idx] * dynamic_ker[i * v + j];
+                            }
+                        }
+
+                        
+                        if (pixel_sum > 255.0f) pixel_sum = 255.0f;
+                        if (pixel_sum < 0.0f) pixel_sum = 0.0f;
+                        
+                        temp_data[index] = (unsigned char)pixel_sum;
+                    }
+                }
+            }
+
+            free(dynamic_ker);
 
             image_save("output.ppm", width, height, temp_data);
 
@@ -265,4 +189,26 @@ void image_save(const char *path, int width, int height, unsigned char *temp_dat
 
     fclose(out);
     printf("Image saved successfully as %s\n", path);
+}
+
+void generate_gaussian_kernel(float *kernel, int k_size, float sigma) {
+    int r = k_size / 2;
+    float sum = 0.0;
+    float s = 2.0 * sigma * sigma;
+
+    
+    for (int i = 0; i < k_size; i++) {
+        for (int j = 0; j < k_size; j++) {
+            int x = j - r; 
+            int y = i - r; 
+            
+            float val = exp(-(x * x + y * y) / s) / (M_PI * s);
+            kernel[i * k_size + j] = val;
+            sum += val;
+        }
+    }
+
+    for (int i = 0; i < k_size * k_size; i++) {
+        kernel[i] /= sum;
+    }
 }
